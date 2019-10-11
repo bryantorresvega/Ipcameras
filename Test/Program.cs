@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace ConsoleApp1
 {
@@ -22,8 +24,8 @@ namespace ConsoleApp1
             camera.configFilesReader(camera.path, camera.xmlTagName);
             foreach (KeyValuePair<string, string> kvp in camera.ds)
             {
-                Console.WriteLine("Key =  {0}, Value = {1}",kvp.Key, kvp.Value);
-                if(camera.macAddressVerifier() == false)
+                Console.WriteLine("Key =  {0}, Value = {1}",
+                    kvp.Key, kvp.Value);
                 if (kvp.Value == "192.168.1.33")
                    camera.xmlWriter(camera.filePath, "Camera", kvp.Key);
             }
@@ -93,8 +95,7 @@ namespace ConsoleApp1
             }
             return macAddress;
         }
-        //-->Code for calling arp -a and grabbing mac address 
-
+       
         //-->Code for reading xml
         public string xmlReader(string fileName, string tagName)
         {
@@ -152,10 +153,12 @@ namespace ConsoleApp1
                         //Add the node to the document.
                        // xmlDoc.DocumentElement.AppendChild(elem);
                         node.InsertAfter(elem, node.FirstChild);
-                        xmlDoc.Save(filePath);
+                        xmlDoc.Save(@"C:\\Program Files\\Weighing System\\Camera\\68d5fd42-5595-41e2-81c9-639793ab870f.config");
                         
 
-                    }                                               
+                    }
+                            
+                    
                 }
             }
         }
@@ -165,9 +168,8 @@ namespace ConsoleApp1
         public bool macAddressVerifier()
         { 
            bool macAddress = false;
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(filePath);
-            XmlNodeList List = xmlDoc.GetElementsByTagName("Camera");
+           XmlDocument xmlDoc = new XmlDocument();
+           XmlNodeList List = xmlDoc.GetElementsByTagName("Camera");
           
             
              if(List[0] != null)
@@ -181,6 +183,48 @@ namespace ConsoleApp1
              return macAddress;
         }
         //->Method to verify the existence of a macaddress
+
+        //--PingTaskList
+        public bool CreatePingTaskList()
+        {
+            var idList = new List<int>();
+            var list = new List<Task>();
+
+
+            for (int i = 0; i < 5; i++)
+            {
+                string tmp = "/C for /l %i in (" + (1 + (i * 50)) + ",1," + (50 * (1 + i)) + ") do @ping 192.168.1.%i -n 1 -w 100 -l 1";
+                var t = new Task(() =>
+                {
+                    ProcessStartInfo PingNetwork = new ProcessStartInfo();
+                    PingNetwork.FileName = "cmd.exe";
+                    PingNetwork.Arguments = tmp;
+                    PingNetwork.UseShellExecute = true;
+                    PingNetwork.CreateNoWindow = true;
+                    Process Pn = Process.Start(PingNetwork);
+                    idList.Add(Pn.Id);
+                });
+
+                list.Add(t);
+            }
+
+            foreach (var t in list)
+            {
+                t.Start();
+                t.Wait();
+            }
+
+            foreach (int id in idList)
+            {
+                Process cmdProcess = Process.GetProcessById(id);
+
+                while (cmdProcess.HasExited != true)
+                    Thread.Sleep(1000);
+            }
+            return true;
+        }
+        //--PingTaskList
+
     }
 }
 
