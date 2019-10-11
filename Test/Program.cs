@@ -56,44 +56,52 @@ namespace ConsoleApp1
         //-->Code for calling arp -a and retrieving macaddress 
         public string getMacAddress(string ipAddress)
         {
-            string cmdLine;
             string macAddress = string.Empty;
+            bool PingTaskList;
 
-            ProcessStartInfo PingNetwork = new ProcessStartInfo();
-            PingNetwork.FileName = "cmd.exe";
-            PingNetwork.Arguments = "/C for /l %i in (1,1,254) do @ping 192.168.1.%i -n 1 -w 100 -l 1";
-            PingNetwork.UseShellExecute = true;
-            PingNetwork.CreateNoWindow = true;
-            Process Pn = Process.Start(PingNetwork);
-            Pn.WaitForExit();
+            PingTaskList = CreatePingTaskList();
+
+            //ProcessStartInfo PingNetwork = new ProcessStartInfo();
+            //PingNetwork.FileName = "cmd.exe";
+            //PingNetwork.Arguments = "/C for /l %i in (1,1,254) do @ping 192.168.1.%i -n 1 -w 100 -l 1";
+            //PingNetwork.UseShellExecute = true;
+            //PingNetwork.CreateNoWindow = true;
+            //Process Pn = Process.Start(PingNetwork);
+            //Pn.WaitForExit();
+
+
 
             // if (!Pn.HasExited) { }
-            ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = "cmd.exe";
-            psi.Arguments = "/C arp -a > net_info.txt";
-            psi.UseShellExecute = true;
-            Process tmp = Process.Start(psi);
 
-            using (StreamReader sr = new StreamReader(Environment.CurrentDirectory + "\\net_info.txt"))
+            if (PingTaskList == true)
             {
-                string line = string.Empty;
-                while (sr.EndOfStream == false)
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = "cmd.exe";
+                psi.Arguments = "/C arp -a > net_info.txt";
+                psi.UseShellExecute = true;
+                Process tmp = Process.Start(psi);
+
+                using (StreamReader sr = new StreamReader(Environment.CurrentDirectory + "\\net_info.txt"))
                 {
-                    line = sr.ReadLine();
-                    // Dictionary<string, string> ds = new Dictionary<string, string>();
-
-                    if (!string.IsNullOrWhiteSpace(line))
+                    string line = string.Empty;
+                    while (sr.EndOfStream == false)
                     {
-                        string[] address = line.Split(new char[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        line = sr.ReadLine();
+                        // Dictionary<string, string> ds = new Dictionary<string, string>();
 
-                        if (!ds.ContainsKey(address[1])) //Example 255.255.255.255 is the phsyical layer broadcast address while 192.168.1.255 would be considered the network layer broadcast address both hold the same **MacAddress
-                            ds.Add(address[1], address[0]);
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            string[] address = line.Split(new char[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (!ds.ContainsKey(address[1])) //Example 255.255.255.255 is the phsyical layer broadcast address while 192.168.1.255 would be considered the network layer broadcast address both hold the same **MacAddress
+                                ds.Add(address[1], address[0]);
+                        }
                     }
                 }
-                //
-                //
+                return macAddress;
             }
-            return macAddress;
+            else
+                return string.Empty;
         }
        
         //-->Code for reading xml
@@ -156,9 +164,7 @@ namespace ConsoleApp1
                         xmlDoc.Save(@"C:\\Program Files\\Weighing System\\Camera\\68d5fd42-5595-41e2-81c9-639793ab870f.config");
                         
 
-                    }
-                            
-                    
+                    }                                           
                 }
             }
         }
